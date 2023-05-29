@@ -9,18 +9,52 @@ public class Screw : MonoBehaviour
     public BoxCollider tip;
     bool IsScrewed = false;
     bool IsScrewedOut = false;
+    bool IsGettingScrewedIn = false;
     public Transform ScrewedOutPosition;
     public Transform ScrewedInPosition;
     public Rigidbody m_Rigidbody;
     public TutorialScreenChanger tutorial;
+    Collider[] m_Colliders;
+    public LayerMask layer;
     void Update()
     {
-        if(IsScrewed == true){
+        m_Colliders = Physics.OverlapBox(transform.position, gameObject.GetComponent<BoxCollider>().size, transform.rotation, layer);
+        if (IsScrewed == true && !IsScrewedOut){
             transform.position = Vector3.MoveTowards(transform.position,ScrewedOutPosition.position, V);
-            if(transform.position == ScrewedOutPosition.position)
+
+            bool temp = false;
+            foreach (Collider c in m_Colliders)
             {
-                ScrewedOut();
+                if (c.GetComponent<Socket>() != null) {
+                    temp = true;
+                
             }
+                if (temp)
+                {
+                    ScrewedOut();
+                }
+            }
+        }
+        if (IsScrewed == true && IsScrewedOut)
+        {
+
+            transform.position = Vector3.MoveTowards(transform.position, ScrewedInPosition.position, V);
+            bool temp = false;
+            foreach (Collider c in m_Colliders)
+            {
+                if (c.GetComponent<Socket>() != null)
+                {
+                    m_Rigidbody.constraints = RigidbodyConstraints.FreezePositionX | RigidbodyConstraints.FreezePositionY | RigidbodyConstraints.FreezeRotation; 
+                }
+
+
+            }
+            
+
+        }
+        if(gameObject.transform.position == ScrewedInPosition.position)
+        {
+            IsScrewedOut= false;
         }
     }
 
@@ -34,6 +68,8 @@ public class Screw : MonoBehaviour
             {
                 m_Rigidbody.constraints = RigidbodyConstraints.FreezePositionX | RigidbodyConstraints.FreezePositionY | RigidbodyConstraints.FreezeRotation;
             }
+
+
         };
     }
 
@@ -44,15 +80,25 @@ public class Screw : MonoBehaviour
         {
             if (IsScrewedOut == false)
             {
-                IsScrewed = false;
-            m_Rigidbody.constraints = RigidbodyConstraints.FreezeAll;
+                m_Rigidbody.constraints = RigidbodyConstraints.FreezeAll;
             }
+            IsScrewed = false;
         }
     }
 
     public void ScrewedOut() {
+        IsScrewed= false;
         IsScrewedOut = true;
+        IsGettingScrewedIn = true;
         m_Rigidbody.constraints = RigidbodyConstraints.None;
         tutorial.ScreenNumber =2;
+    }
+    public void ScrewedIn()
+    {
+        IsScrewed = false;
+        
+        IsGettingScrewedIn = false;
+        
+        
     }
 }
